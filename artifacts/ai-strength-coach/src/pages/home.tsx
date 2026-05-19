@@ -50,6 +50,95 @@ function hasAnyAssessmentData(a: AssessmentValues): boolean {
   return !!(a.squat5RM || a.deadlift5RM || a.bench5RM || a.overheadPress5RM || a.maxPushUps || a.bodyweightSquats || a.verticalJump || a.sprintTime);
 }
 
+type AssessmentFieldKey = keyof AssessmentValues;
+
+interface AssessmentFieldConfig {
+  key: AssessmentFieldKey;
+  label: string;
+  placeholder: string;
+  type: "text" | "number";
+}
+
+interface SportAssessmentConfig {
+  description: string;
+  fields: AssessmentFieldConfig[];
+}
+
+const SPORT_ASSESSMENT_CONFIG: Record<string, SportAssessmentConfig> = {
+  cycling: {
+    description: "Cycling performance is driven by leg power and posterior chain strength. These tests calibrate your lower body training load — hip drive, quad strength, and muscular endurance.",
+    fields: [
+      { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 135 lbs × 5", type: "text" },
+      { key: "deadlift5RM", label: "Deadlift (5-rep set)", placeholder: "e.g. 185 lbs × 5", type: "text" },
+      { key: "bodyweightSquats", label: "Bodyweight Squats (1 min)", placeholder: "e.g. 45", type: "number" },
+      { key: "verticalJump", label: "Vertical Jump", placeholder: "e.g. 22 inches", type: "text" },
+    ],
+  },
+  running: {
+    description: "Runners need strong, injury-resistant legs, hips, and core. These tests identify your strength base so the program can protect joints and build speed-supporting power.",
+    fields: [
+      { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 135 lbs × 5", type: "text" },
+      { key: "deadlift5RM", label: "Deadlift / RDL (5-rep set)", placeholder: "e.g. 155 lbs × 5", type: "text" },
+      { key: "maxPushUps", label: "Max Push-Ups (unbroken)", placeholder: "e.g. 25", type: "number" },
+      { key: "bodyweightSquats", label: "Bodyweight Squats (1 min)", placeholder: "e.g. 50", type: "number" },
+      { key: "sprintTime", label: "Sprint Time", placeholder: "e.g. 4.9s (40 yards)", type: "text" },
+    ],
+  },
+  soccer: {
+    description: "Soccer demands explosive power, agility, and multi-directional strength. These tests cover the key physical qualities that translate directly to on-field performance.",
+    fields: [
+      { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 145 lbs × 5", type: "text" },
+      { key: "deadlift5RM", label: "Deadlift (5-rep set)", placeholder: "e.g. 185 lbs × 5", type: "text" },
+      { key: "maxPushUps", label: "Max Push-Ups (unbroken)", placeholder: "e.g. 30", type: "number" },
+      { key: "bodyweightSquats", label: "Bodyweight Squats (1 min)", placeholder: "e.g. 45", type: "number" },
+      { key: "verticalJump", label: "Vertical Jump", placeholder: "e.g. 22 inches", type: "text" },
+      { key: "sprintTime", label: "Sprint Time", placeholder: "e.g. 4.8s (40 yards)", type: "text" },
+    ],
+  },
+  basketball: {
+    description: "Basketball requires explosive legs, upper body strength, and elite vertical power. Vertical jump is your primary performance marker — every prescription is built around it.",
+    fields: [
+      { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 145 lbs × 5", type: "text" },
+      { key: "bench5RM", label: "Bench Press (5-rep set)", placeholder: "e.g. 115 lbs × 5", type: "text" },
+      { key: "maxPushUps", label: "Max Push-Ups (unbroken)", placeholder: "e.g. 30", type: "number" },
+      { key: "verticalJump", label: "Vertical Jump", placeholder: "e.g. 26 inches", type: "text" },
+      { key: "bodyweightSquats", label: "Bodyweight Squats (1 min)", placeholder: "e.g. 45", type: "number" },
+      { key: "sprintTime", label: "Lane Sprint / 3/4-Court", placeholder: "e.g. 3.2s", type: "text" },
+    ],
+  },
+  powerlifting: {
+    description: "Powerlifting is defined by squat, bench, and deadlift. Enter your best 5-rep sets and we'll calculate precise training maxes using the Brzycki formula.",
+    fields: [
+      { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 225 lbs × 5", type: "text" },
+      { key: "deadlift5RM", label: "Deadlift (5-rep set)", placeholder: "e.g. 315 lbs × 5", type: "text" },
+      { key: "bench5RM", label: "Bench Press (5-rep set)", placeholder: "e.g. 185 lbs × 5", type: "text" },
+      { key: "overheadPress5RM", label: "Overhead Press (5-rep set)", placeholder: "e.g. 115 lbs × 5", type: "text" },
+    ],
+  },
+  general: {
+    description: "A balanced assessment across all major movement patterns gives the AI the data it needs to prescribe precise weights for every exercise.",
+    fields: [
+      { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 135 lbs × 5", type: "text" },
+      { key: "deadlift5RM", label: "Deadlift (5-rep set)", placeholder: "e.g. 185 lbs × 5", type: "text" },
+      { key: "bench5RM", label: "Bench Press (5-rep set)", placeholder: "e.g. 115 lbs × 5", type: "text" },
+      { key: "overheadPress5RM", label: "Overhead Press (5-rep set)", placeholder: "e.g. 75 lbs × 5", type: "text" },
+      { key: "maxPushUps", label: "Max Push-Ups (unbroken)", placeholder: "e.g. 30", type: "number" },
+      { key: "bodyweightSquats", label: "Bodyweight Squats (1 min)", placeholder: "e.g. 45", type: "number" },
+    ],
+  },
+};
+
+const DEFAULT_ASSESSMENT_CONFIG: SportAssessmentConfig = {
+  description: "Enter your best recent test results. These are used to calculate personalized working weights. Leave any field blank and the AI will use RPE guidelines instead.",
+  fields: [
+    { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 135 lbs × 5", type: "text" },
+    { key: "deadlift5RM", label: "Deadlift (5-rep set)", placeholder: "e.g. 185 lbs × 5", type: "text" },
+    { key: "bench5RM", label: "Bench Press (5-rep set)", placeholder: "e.g. 115 lbs × 5", type: "text" },
+    { key: "maxPushUps", label: "Max Push-Ups (unbroken)", placeholder: "e.g. 30", type: "number" },
+    { key: "bodyweightSquats", label: "Bodyweight Squats (1 min)", placeholder: "e.g. 45", type: "number" },
+  ],
+};
+
 export default function Home() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -380,75 +469,40 @@ export default function Home() {
                   </Button>
                 </div>
                 
-                <p className="text-sm text-muted-foreground">
-                  Enter your best recent test results. These are used to calculate personalized working weights for your program. Leave blank if unsure — the AI will use RPE guidelines instead.
-                </p>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField control={assessmentForm.control} name="squat5RM" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Squat (5-rep set)</FormLabel>
-                      <FormControl><Input data-testid="squat-input" placeholder="e.g. 135 lbs × 5" className="bg-background border-border" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-
-                  <FormField control={assessmentForm.control} name="deadlift5RM" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Deadlift (5-rep set)</FormLabel>
-                      <FormControl><Input data-testid="deadlift-input" placeholder="e.g. 185 lbs × 5" className="bg-background border-border" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-
-                  <FormField control={assessmentForm.control} name="bench5RM" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Bench Press (5-rep set)</FormLabel>
-                      <FormControl><Input data-testid="bench-input" placeholder="e.g. 115 lbs × 5" className="bg-background border-border" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-
-                  <FormField control={assessmentForm.control} name="overheadPress5RM" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Overhead Press (5-rep set)</FormLabel>
-                      <FormControl><Input data-testid="ohp-input" placeholder="e.g. 75 lbs × 5" className="bg-background border-border" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-
-                  <FormField control={assessmentForm.control} name="maxPushUps" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Max Push-Ups (unbroken)</FormLabel>
-                      <FormControl><Input data-testid="pushups-input" type="number" placeholder="e.g. 30" className="bg-background border-border" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-
-                  <FormField control={assessmentForm.control} name="bodyweightSquats" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Bodyweight Squats (1 min)</FormLabel>
-                      <FormControl><Input data-testid="bwsquats-input" type="number" placeholder="e.g. 45" className="bg-background border-border" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-
-                  <FormField control={assessmentForm.control} name="verticalJump" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Vertical Jump</FormLabel>
-                      <FormControl><Input data-testid="vertical-jump-input" placeholder="e.g. 22 inches" className="bg-background border-border" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-
-                  <FormField control={assessmentForm.control} name="sprintTime" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Sprint Time</FormLabel>
-                      <FormControl><Input data-testid="sprint-time-input" placeholder="e.g. 4.9s (40 yards)" className="bg-background border-border" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                </div>
+                {(() => {
+                  const sport = profileData?.sport ?? "";
+                  const config = SPORT_ASSESSMENT_CONFIG[sport] ?? DEFAULT_ASSESSMENT_CONFIG;
+                  return (
+                    <>
+                      <p className="text-sm text-muted-foreground">{config.description} Leave any field blank and the AI will use RPE guidelines instead.</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        {config.fields.map((fc) => (
+                          <FormField
+                            key={fc.key}
+                            control={assessmentForm.control}
+                            name={fc.key}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">{fc.label}</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    data-testid={`assessment-${fc.key}`}
+                                    type={fc.type}
+                                    placeholder={fc.placeholder}
+                                    className="bg-background border-border"
+                                    {...field}
+                                    value={field.value ?? ""}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
 
               <div className="pt-4 mt-auto flex flex-col gap-3">
