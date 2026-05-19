@@ -130,6 +130,35 @@ components:
       required:
         - status
 
+    StrengthAssessment:
+      type: object
+      description: Results from the athlete's strength assessment tests
+      properties:
+        squat5RM:
+          type: string
+          description: "e.g. '135 lbs x 5' or '100 kg x 3'"
+        deadlift5RM:
+          type: string
+          description: "e.g. '225 lbs x 5'"
+        bench5RM:
+          type: string
+          description: "e.g. '115 lbs x 5'"
+        overheadPress5RM:
+          type: string
+          description: "e.g. '75 lbs x 5'"
+        maxPushUps:
+          type: integer
+          description: Maximum consecutive push-ups
+        bodyweightSquats:
+          type: integer
+          description: Bodyweight squats completed in 1 minute
+        verticalJump:
+          type: string
+          description: "e.g. '24 inches' (optional)"
+        sprintTime:
+          type: string
+          description: "e.g. '4.8s for 40 yards' (optional)"
+
     WorkoutPlan:
       type: object
       properties:
@@ -151,6 +180,8 @@ components:
           type: integer
         planContent:
           type: string
+        strengthAssessment:
+          $ref: "#/components/schemas/StrengthAssessment"
         createdAt:
           type: string
           format: date-time
@@ -184,6 +215,8 @@ components:
           type: integer
         planContent:
           type: string
+        strengthAssessment:
+          $ref: "#/components/schemas/StrengthAssessment"
       required:
         - sport
         - experienceLevel
@@ -210,6 +243,8 @@ components:
           type: string
         daysPerWeek:
           type: integer
+        strengthAssessment:
+          $ref: "#/components/schemas/StrengthAssessment"
       required:
         - sport
         - experienceLevel

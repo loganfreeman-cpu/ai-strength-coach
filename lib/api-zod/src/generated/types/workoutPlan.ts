@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { StrengthAssessment } from './strengthAssessment';
 
 export interface WorkoutPlan {
   id: number;
@@ -17,5 +18,6 @@ export interface WorkoutPlan {
   goals: string;
   daysPerWeek: number;
   planContent: string;
+  strengthAssessment?: StrengthAssessment;
   createdAt: Date;
 }

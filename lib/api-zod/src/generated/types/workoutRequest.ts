@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { StrengthAssessment } from './strengthAssessment';
 
 export interface WorkoutRequest {
   sport: string;
@@ -14,4 +15,5 @@ export interface WorkoutRequest {
   currentStats: string;
   goals: string;
   daysPerWeek: number;
+  strengthAssessment?: StrengthAssessment;
 }

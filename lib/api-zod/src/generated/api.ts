@@ -30,6 +30,16 @@ export const ListWorkoutPlansResponseItem = zod.object({
   "goals": zod.string(),
   "daysPerWeek": zod.number(),
   "planContent": zod.string(),
+  "strengthAssessment": zod.object({
+  "squat5RM": zod.string().optional().describe('e.g. \'135 lbs x 5\' or \'100 kg x 3\''),
+  "deadlift5RM": zod.string().optional().describe('e.g. \'225 lbs x 5\''),
+  "bench5RM": zod.string().optional().describe('e.g. \'115 lbs x 5\''),
+  "overheadPress5RM": zod.string().optional().describe('e.g. \'75 lbs x 5\''),
+  "maxPushUps": zod.number().optional().describe('Maximum consecutive push-ups'),
+  "bodyweightSquats": zod.number().optional().describe('Bodyweight squats completed in 1 minute'),
+  "verticalJump": zod.string().optional().describe('e.g. \'24 inches\' (optional)'),
+  "sprintTime": zod.string().optional().describe('e.g. \'4.8s for 40 yards\' (optional)')
+}).optional().describe('Results from the athlete\'s strength assessment tests'),
   "createdAt": zod.coerce.date()
 })
 export const ListWorkoutPlansResponse = zod.array(ListWorkoutPlansResponseItem)
@@ -46,7 +56,17 @@ export const SaveWorkoutPlanBody = zod.object({
   "currentStats": zod.string(),
   "goals": zod.string(),
   "daysPerWeek": zod.number(),
-  "planContent": zod.string()
+  "planContent": zod.string(),
+  "strengthAssessment": zod.object({
+  "squat5RM": zod.string().optional().describe('e.g. \'135 lbs x 5\' or \'100 kg x 3\''),
+  "deadlift5RM": zod.string().optional().describe('e.g. \'225 lbs x 5\''),
+  "bench5RM": zod.string().optional().describe('e.g. \'115 lbs x 5\''),
+  "overheadPress5RM": zod.string().optional().describe('e.g. \'75 lbs x 5\''),
+  "maxPushUps": zod.number().optional().describe('Maximum consecutive push-ups'),
+  "bodyweightSquats": zod.number().optional().describe('Bodyweight squats completed in 1 minute'),
+  "verticalJump": zod.string().optional().describe('e.g. \'24 inches\' (optional)'),
+  "sprintTime": zod.string().optional().describe('e.g. \'4.8s for 40 yards\' (optional)')
+}).optional().describe('Results from the athlete\'s strength assessment tests')
 })
 
 
@@ -67,6 +87,16 @@ export const GetWorkoutPlanResponse = zod.object({
   "goals": zod.string(),
   "daysPerWeek": zod.number(),
   "planContent": zod.string(),
+  "strengthAssessment": zod.object({
+  "squat5RM": zod.string().optional().describe('e.g. \'135 lbs x 5\' or \'100 kg x 3\''),
+  "deadlift5RM": zod.string().optional().describe('e.g. \'225 lbs x 5\''),
+  "bench5RM": zod.string().optional().describe('e.g. \'115 lbs x 5\''),
+  "overheadPress5RM": zod.string().optional().describe('e.g. \'75 lbs x 5\''),
+  "maxPushUps": zod.number().optional().describe('Maximum consecutive push-ups'),
+  "bodyweightSquats": zod.number().optional().describe('Bodyweight squats completed in 1 minute'),
+  "verticalJump": zod.string().optional().describe('e.g. \'24 inches\' (optional)'),
+  "sprintTime": zod.string().optional().describe('e.g. \'4.8s for 40 yards\' (optional)')
+}).optional().describe('Results from the athlete\'s strength assessment tests'),
   "createdAt": zod.coerce.date()
 })
 
@@ -89,7 +119,17 @@ export const GenerateWorkoutBody = zod.object({
   "weight": zod.string().optional(),
   "currentStats": zod.string(),
   "goals": zod.string(),
-  "daysPerWeek": zod.number()
+  "daysPerWeek": zod.number(),
+  "strengthAssessment": zod.object({
+  "squat5RM": zod.string().optional().describe('e.g. \'135 lbs x 5\' or \'100 kg x 3\''),
+  "deadlift5RM": zod.string().optional().describe('e.g. \'225 lbs x 5\''),
+  "bench5RM": zod.string().optional().describe('e.g. \'115 lbs x 5\''),
+  "overheadPress5RM": zod.string().optional().describe('e.g. \'75 lbs x 5\''),
+  "maxPushUps": zod.number().optional().describe('Maximum consecutive push-ups'),
+  "bodyweightSquats": zod.number().optional().describe('Bodyweight squats completed in 1 minute'),
+  "verticalJump": zod.string().optional().describe('e.g. \'24 inches\' (optional)'),
+  "sprintTime": zod.string().optional().describe('e.g. \'4.8s for 40 yards\' (optional)')
+}).optional().describe('Results from the athlete\'s strength assessment tests')
 })
 
 

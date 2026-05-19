@@ -8,6 +8,7 @@
 
 export * from './apiError';
 export * from './healthStatus';
+export * from './strengthAssessment';
 export * from './workoutPlan';
 export * from './workoutPlanInput';
 export * from './workoutRequest';

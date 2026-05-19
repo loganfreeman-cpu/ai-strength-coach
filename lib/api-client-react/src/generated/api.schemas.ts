@@ -9,6 +9,28 @@ export interface HealthStatus {
   status: string;
 }
 
+/**
+ * Results from the athlete's strength assessment tests
+ */
+export interface StrengthAssessment {
+  /** e.g. '135 lbs x 5' or '100 kg x 3' */
+  squat5RM?: string;
+  /** e.g. '225 lbs x 5' */
+  deadlift5RM?: string;
+  /** e.g. '115 lbs x 5' */
+  bench5RM?: string;
+  /** e.g. '75 lbs x 5' */
+  overheadPress5RM?: string;
+  /** Maximum consecutive push-ups */
+  maxPushUps?: number;
+  /** Bodyweight squats completed in 1 minute */
+  bodyweightSquats?: number;
+  /** e.g. '24 inches' (optional) */
+  verticalJump?: string;
+  /** e.g. '4.8s for 40 yards' (optional) */
+  sprintTime?: string;
+}
+
 export interface WorkoutPlan {
   id: number;
   sport: string;
@@ -20,6 +42,7 @@ export interface WorkoutPlan {
   goals: string;
   daysPerWeek: number;
   planContent: string;
+  strengthAssessment?: StrengthAssessment;
   createdAt: string;
 }
 
@@ -32,6 +55,7 @@ export interface WorkoutPlanInput {
   goals: string;
   daysPerWeek: number;
   planContent: string;
+  strengthAssessment?: StrengthAssessment;
 }
 
 export interface WorkoutRequest {
@@ -42,6 +66,7 @@ export interface WorkoutRequest {
   currentStats: string;
   goals: string;
   daysPerWeek: number;
+  strengthAssessment?: StrengthAssessment;
 }
 
 export interface ApiError {

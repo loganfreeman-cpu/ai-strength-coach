@@ -19,7 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dumbbell, History, Trash2, Zap, ArrowRight, Save, Play } from "lucide-react";
+import { Dumbbell, History, Trash2, Zap, ArrowRight, Save, Play, FileDown } from "lucide-react";
+import { exportWorkoutPdf } from "@/lib/exportPdf";
 
 const formSchema = z.object({
   sport: z.string().min(1, "Sport is required"),
@@ -33,12 +34,32 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const assessmentSchema = z.object({
+  squat5RM: z.string().optional(),
+  deadlift5RM: z.string().optional(),
+  bench5RM: z.string().optional(),
+  overheadPress5RM: z.string().optional(),
+  maxPushUps: z.coerce.number().optional(),
+  bodyweightSquats: z.coerce.number().optional(),
+  verticalJump: z.string().optional(),
+  sprintTime: z.string().optional(),
+});
+type AssessmentValues = z.infer<typeof assessmentSchema>;
+
+function hasAnyAssessmentData(a: AssessmentValues): boolean {
+  return !!(a.squat5RM || a.deadlift5RM || a.bench5RM || a.overheadPress5RM || a.maxPushUps || a.bodyweightSquats || a.verticalJump || a.sprintTime);
+}
+
 export default function Home() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [step, setStep] = useState<"profile" | "assessment" | "plan">("profile");
+  const [profileData, setProfileData] = useState<FormValues | null>(null);
+  const [assessmentData, setAssessmentData] = useState<AssessmentValues | null>(null);
+  
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamedPlan, setStreamedPlan] = useState("");
-  const [currentRequest, setCurrentRequest] = useState<FormValues | null>(null);
+  const [currentRequest, setCurrentRequest] = useState<{ profile: FormValues; assessment: AssessmentValues } | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [viewingSavedPlan, setViewingSavedPlan] = useState<any>(null);
 
@@ -59,18 +80,43 @@ export default function Home() {
     }
   });
 
-  const generatePlan = async (values: FormValues) => {
+  const assessmentForm = useForm<AssessmentValues>({
+    resolver: zodResolver(assessmentSchema),
+    defaultValues: {
+      squat5RM: "",
+      deadlift5RM: "",
+      bench5RM: "",
+      overheadPress5RM: "",
+      maxPushUps: undefined,
+      bodyweightSquats: undefined,
+      verticalJump: "",
+      sprintTime: "",
+    }
+  });
+
+  const onProfileSubmit = (values: FormValues) => {
+    setProfileData(values);
+    setStep("assessment");
+  };
+
+  const generatePlan = async (profile: FormValues, assessment: AssessmentValues) => {
     setIsGenerating(true);
     setStreamedPlan("");
-    setCurrentRequest(values);
+    setCurrentRequest({ profile, assessment });
     setViewingSavedPlan(null);
+    setStep("plan");
 
     try {
+      const payload = {
+        ...profile,
+        strengthAssessment: hasAnyAssessmentData(assessment) ? assessment : undefined,
+      };
+
       const BASE = import.meta.env.BASE_URL;
       const response = await fetch(`${BASE}api/workout/generate`, { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(values) 
+        body: JSON.stringify(payload) 
       });
       
       if (!response.body) throw new Error("No response body");
@@ -107,8 +153,11 @@ export default function Home() {
     
     savePlanMutation.mutate({
       data: {
-        ...currentRequest,
-        planContent: streamedPlan
+        ...currentRequest.profile,
+        planContent: streamedPlan,
+        strengthAssessment: currentRequest.assessment && hasAnyAssessmentData(currentRequest.assessment)
+          ? currentRequest.assessment
+          : undefined,
       }
     }, {
       onSuccess: () => {
@@ -134,11 +183,39 @@ export default function Home() {
   };
 
   const activePlanContent = viewingSavedPlan ? viewingSavedPlan.planContent : streamedPlan;
-  const isViewingGenerated = !viewingSavedPlan && streamedPlan.length > 0;
+  const isViewingGenerated = (!viewingSavedPlan && streamedPlan.length > 0) || viewingSavedPlan;
+
+  const exportPlan = () => {
+    if (!currentRequest || !activePlanContent) return;
+    exportWorkoutPdf({
+      sport: currentRequest.profile.sport,
+      experienceLevel: currentRequest.profile.experienceLevel,
+      age: currentRequest.profile.age,
+      weight: currentRequest.profile.weight,
+      goals: currentRequest.profile.goals,
+      daysPerWeek: currentRequest.profile.daysPerWeek,
+      assessment: currentRequest.assessment,
+      planContent: activePlanContent,
+    });
+  };
+
+  const exportSavedPlan = () => {
+    if (!viewingSavedPlan) return;
+    exportWorkoutPdf({
+      sport: viewingSavedPlan.sport,
+      experienceLevel: viewingSavedPlan.experienceLevel,
+      age: viewingSavedPlan.age,
+      weight: viewingSavedPlan.weight ?? undefined,
+      goals: viewingSavedPlan.goals,
+      daysPerWeek: viewingSavedPlan.daysPerWeek,
+      assessment: viewingSavedPlan.strengthAssessment as any,
+      planContent: viewingSavedPlan.planContent,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
-      {/* Left Column: Form */}
+      {/* Left Column */}
       <div className="w-full md:w-[450px] lg:w-[500px] bg-card border-r border-border p-6 md:p-8 flex flex-col h-screen overflow-y-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -195,101 +272,278 @@ export default function Home() {
           </Sheet>
         </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(generatePlan)} className="space-y-6 flex-1">
-            <div className="space-y-4">
-              <h2 className="text-lg font-display text-primary uppercase tracking-widest border-b border-border pb-2">Athlete Profile</h2>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="sport" render={({ field }) => (
+        {step === "profile" && (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onProfileSubmit)} className="space-y-6 flex-1">
+              <div className="space-y-4">
+                <h2 className="text-lg font-display text-primary uppercase tracking-widest border-b border-border pb-2">Athlete Profile</h2>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="sport" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Sport</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="sport-select" className="bg-background border-border"><SelectValue placeholder="Select" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="cycling">Cycling</SelectItem>
+                          <SelectItem value="running">Running</SelectItem>
+                          <SelectItem value="soccer">Soccer</SelectItem>
+                          <SelectItem value="basketball">Basketball</SelectItem>
+                          <SelectItem value="powerlifting">Powerlifting</SelectItem>
+                          <SelectItem value="general">General Fitness</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={form.control} name="experienceLevel" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Level</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="experience-select" className="bg-background border-border"><SelectValue placeholder="Select" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="beginner">Beginner</SelectItem>
+                          <SelectItem value="intermediate">Intermediate</SelectItem>
+                          <SelectItem value="advanced">Advanced</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="age" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Age</FormLabel>
+                      <FormControl><Input data-testid="age-input" type="number" className="bg-background border-border" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={form.control} name="weight" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Weight (opt)</FormLabel>
+                      <FormControl><Input data-testid="weight-input" placeholder="e.g. 180 lbs" className="bg-background border-border" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+
+                <FormField control={form.control} name="daysPerWeek" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Sport</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="cycling">Cycling</SelectItem>
-                        <SelectItem value="running">Running</SelectItem>
-                        <SelectItem value="soccer">Soccer</SelectItem>
-                        <SelectItem value="basketball">Basketball</SelectItem>
-                        <SelectItem value="powerlifting">Powerlifting</SelectItem>
-                        <SelectItem value="general">General Fitness</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Training Days per Week</FormLabel>
+                    <FormControl><Input data-testid="days-input" type="number" min={1} max={7} className="bg-background border-border" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="experienceLevel" render={({ field }) => (
+                <FormField control={form.control} name="currentStats" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Level</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="beginner">Beginner</SelectItem>
-                        <SelectItem value="intermediate">Intermediate</SelectItem>
-                        <SelectItem value="advanced">Advanced</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Current Stats / Benchmarks</FormLabel>
+                    <FormControl><Textarea data-testid="stats-input" placeholder="Current 1RMs, VO2 max, race pace..." className="bg-background border-border resize-none h-20" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="goals" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Specific Goals</FormLabel>
+                    <FormControl><Textarea data-testid="goals-input" placeholder="Increase vertical jump, drop 5k time..." className="bg-background border-border resize-none h-20" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="age" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Age</FormLabel>
-                    <FormControl><Input type="number" className="bg-background border-border" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+              <div className="pt-4 mt-auto">
+                <Button data-testid="next-assessment-btn" type="submit" className="w-full h-14 text-lg font-display uppercase tracking-widest bg-primary text-primary-foreground hover:bg-primary/90">
+                  Next: Strength Assessment <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </div>
+            </form>
+          </Form>
+        )}
 
-                <FormField control={form.control} name="weight" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Weight (opt)</FormLabel>
-                    <FormControl><Input placeholder="e.g. 180 lbs" className="bg-background border-border" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+        {step === "assessment" && (
+          <Form {...assessmentForm}>
+            <form className="space-y-6 flex-1 flex flex-col">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-border pb-2">
+                  <h2 className="text-lg font-display text-primary uppercase tracking-widest m-0">Strength Assessment</h2>
+                  <Button data-testid="back-to-profile-btn" variant="link" size="sm" className="h-auto p-0 text-muted-foreground hover:text-foreground" onClick={() => setStep("profile")}>
+                    Back
+                  </Button>
+                </div>
+                
+                <p className="text-sm text-muted-foreground">
+                  Enter your best recent test results. These are used to calculate personalized working weights for your program. Leave blank if unsure — the AI will use RPE guidelines instead.
+                </p>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={assessmentForm.control} name="squat5RM" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Squat (5-rep set)</FormLabel>
+                      <FormControl><Input data-testid="squat-input" placeholder="e.g. 135 lbs × 5" className="bg-background border-border" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={assessmentForm.control} name="deadlift5RM" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Deadlift (5-rep set)</FormLabel>
+                      <FormControl><Input data-testid="deadlift-input" placeholder="e.g. 185 lbs × 5" className="bg-background border-border" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={assessmentForm.control} name="bench5RM" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Bench Press (5-rep set)</FormLabel>
+                      <FormControl><Input data-testid="bench-input" placeholder="e.g. 115 lbs × 5" className="bg-background border-border" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={assessmentForm.control} name="overheadPress5RM" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Overhead Press (5-rep set)</FormLabel>
+                      <FormControl><Input data-testid="ohp-input" placeholder="e.g. 75 lbs × 5" className="bg-background border-border" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={assessmentForm.control} name="maxPushUps" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Max Push-Ups (unbroken)</FormLabel>
+                      <FormControl><Input data-testid="pushups-input" type="number" placeholder="e.g. 30" className="bg-background border-border" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={assessmentForm.control} name="bodyweightSquats" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Bodyweight Squats (1 min)</FormLabel>
+                      <FormControl><Input data-testid="bwsquats-input" type="number" placeholder="e.g. 45" className="bg-background border-border" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={assessmentForm.control} name="verticalJump" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Vertical Jump</FormLabel>
+                      <FormControl><Input data-testid="vertical-jump-input" placeholder="e.g. 22 inches" className="bg-background border-border" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={assessmentForm.control} name="sprintTime" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Sprint Time</FormLabel>
+                      <FormControl><Input data-testid="sprint-time-input" placeholder="e.g. 4.9s (40 yards)" className="bg-background border-border" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
               </div>
 
-              <FormField control={form.control} name="daysPerWeek" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Training Days per Week</FormLabel>
-                  <FormControl><Input type="number" min={1} max={7} className="bg-background border-border" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <div className="pt-4 mt-auto flex flex-col gap-3">
+                <Button 
+                  data-testid="skip-generate-btn"
+                  type="button" 
+                  variant="outline"
+                  className="w-full h-12 text-base font-display uppercase tracking-widest border-border"
+                  onClick={() => {
+                    const profile = profileData || form.getValues();
+                    setProfileData(profile);
+                    const emptyAssessment = assessmentForm.getValues();
+                    generatePlan(profile, emptyAssessment);
+                  }}
+                >
+                  Skip & Generate
+                </Button>
+                <Button 
+                  data-testid="generate-weights-btn"
+                  type="button" 
+                  className="w-full h-14 text-lg font-display uppercase tracking-widest bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={assessmentForm.handleSubmit((values) => {
+                    setAssessmentData(values);
+                    const profile = profileData || form.getValues();
+                    setProfileData(profile);
+                    generatePlan(profile, values);
+                  })}
+                >
+                  Generate with Weights <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </div>
+            </form>
+          </Form>
+        )}
 
-              <FormField control={form.control} name="currentStats" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Current Stats / Benchmarks</FormLabel>
-                  <FormControl><Textarea placeholder="Current 1RMs, VO2 max, race pace..." className="bg-background border-border resize-none h-20" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+        {(step === "plan" || isGenerating) && (
+          <div className="space-y-6">
+            <h2 className="text-lg font-display text-primary uppercase tracking-widest border-b border-border pb-2">Profile Summary</h2>
+            
+            <Card className="bg-background border-border">
+              <CardContent className="p-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Sport</p>
+                    <p className="font-medium capitalize">{profileData?.sport || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Level</p>
+                    <p className="font-medium capitalize">{profileData?.experienceLevel || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Age / Weight</p>
+                    <p className="font-medium">{profileData?.age || "N/A"} / {profileData?.weight || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Days/Week</p>
+                    <p className="font-medium">{profileData?.daysPerWeek || "N/A"}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Goals</p>
+                  <p className="font-medium text-sm line-clamp-2">{profileData?.goals || "N/A"}</p>
+                </div>
+              </CardContent>
+            </Card>
 
-              <FormField control={form.control} name="goals" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">Specific Goals</FormLabel>
-                  <FormControl><Textarea placeholder="Increase vertical jump, drop 5k time..." className="bg-background border-border resize-none h-20" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-            </div>
-
-            <div className="pt-4 mt-auto">
-              <Button type="submit" disabled={isGenerating} className="w-full h-14 text-lg font-display uppercase tracking-widest bg-primary text-primary-foreground hover:bg-primary/90">
-                {isGenerating ? "Generating..." : "Generate Program"}
-                {!isGenerating && <ArrowRight className="ml-2 w-5 h-5" />}
+            <div className="flex gap-3 pt-4">
+              <Button 
+                data-testid="edit-profile-btn"
+                variant="outline" 
+                className="flex-1 font-display uppercase tracking-widest"
+                onClick={() => {
+                  setStep("profile");
+                  setStreamedPlan("");
+                  setViewingSavedPlan(null);
+                  setCurrentRequest(null);
+                }}
+              >
+                Edit Profile
+              </Button>
+              <Button 
+                data-testid="regenerate-summary-btn"
+                className="flex-1 font-display uppercase tracking-widest bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => {
+                  if (profileData) {
+                    generatePlan(profileData, assessmentData || assessmentForm.getValues());
+                  }
+                }}
+                disabled={isGenerating}
+              >
+                Regenerate
               </Button>
             </div>
-          </form>
-        </Form>
+          </div>
+        )}
       </div>
 
       {/* Right Column: Results */}
@@ -309,8 +563,11 @@ export default function Home() {
                   <h2 className="text-2xl font-display uppercase tracking-wide">{viewingSavedPlan.sport} Program</h2>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setViewingSavedPlan(null)}>Close</Button>
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(viewingSavedPlan.id)}>
+                  <Button data-testid="close-saved-plan-btn" variant="outline" size="sm" onClick={() => {
+                    setViewingSavedPlan(null);
+                    setStep("profile");
+                  }}>Close</Button>
+                  <Button data-testid="delete-saved-plan-btn" variant="destructive" size="sm" onClick={() => handleDelete(viewingSavedPlan.id)}>
                     <Trash2 className="w-4 h-4 mr-2" /> Delete
                   </Button>
                 </div>
@@ -343,13 +600,26 @@ export default function Home() {
             
             {isViewingGenerated && !isGenerating && (
               <div className="fixed bottom-10 right-10 flex gap-4">
-                <Button variant="outline" size="lg" className="h-12 font-display uppercase tracking-widest text-lg bg-card" onClick={() => form.handleSubmit(generatePlan)()}>
+                <Button data-testid="regenerate-bottom-btn" variant="outline" size="lg" className="h-12 font-display uppercase tracking-widest text-lg bg-card" onClick={() => {
+                    if (viewingSavedPlan) {
+                        setViewingSavedPlan(null);
+                        setStep("profile");
+                    } else if (profileData) {
+                        generatePlan(profileData, assessmentData || assessmentForm.getValues());
+                    }
+                }}>
                   Regenerate
                 </Button>
-                <Button size="lg" className="h-12 font-display uppercase tracking-widest text-lg bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSave} disabled={savePlanMutation.isPending}>
-                  <Save className="w-5 h-5 mr-2" />
-                  {savePlanMutation.isPending ? "Saving..." : "Save Plan"}
+                <Button data-testid="export-pdf-btn" variant="outline" size="lg" className="h-12 font-display uppercase tracking-widest text-lg bg-card" onClick={viewingSavedPlan ? exportSavedPlan : exportPlan}>
+                  <FileDown className="w-5 h-5 mr-2" />
+                  Export PDF
                 </Button>
+                {!viewingSavedPlan && (
+                  <Button data-testid="save-plan-btn" size="lg" className="h-12 font-display uppercase tracking-widest text-lg bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSave} disabled={savePlanMutation.isPending}>
+                    <Save className="w-5 h-5 mr-2" />
+                    {savePlanMutation.isPending ? "Saving..." : "Save Plan"}
+                  </Button>
+                )}
               </div>
             )}
           </div>

@@ -12,6 +12,7 @@ export const workoutPlansTable = pgTable("workout_plans", {
   goals: text("goals").notNull(),
   daysPerWeek: integer("days_per_week").notNull(),
   planContent: text("plan_content").notNull(),
+  strengthAssessment: text("strength_assessment"), // JSON stringified StrengthAssessment
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
