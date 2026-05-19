@@ -1,0 +1,65 @@
+Build a clean, modern web app called "AI Strength Coach".
+
+GOAL:
+The app takes in a user's sport, current performance stats, and what they want to improve, and outputs a personalized weightlifting workout plan.
+
+TECH:
+- Frontend: HTML, CSS, JavaScript (or React if possible)
+- Backend: Node.js with Express (or simple serverless functions)
+- Use OpenAI API (or mock AI if needed) to generate workout plans
+- Keep everything simple and runnable in Replit
+
+FEATURES:
+
+1. INPUT FORM
+Create a clean UI form with the following fields:
+- Sport (dropdown: cycling, running, soccer, basketball, etc.)
+- Experience level (beginner, intermediate, advanced)
+- Age (number)
+- Weight (optional)
+- Current stats (text input, e.g. "FTP 250W", "5k time 20:00", "bench 135")
+- Goals (text input, e.g. "improve sprint power", "get stronger legs")
+- Days per week available to lift (number)
+
+2. AI WORKOUT GENERATION
+When the user submits:
+- Send the data to an AI prompt
+- Generate a structured weekly lifting plan
+
+The plan should include:
+- Weekly schedule (e.g. Day 1, Day 2, etc.)
+- Exercises per day
+- Sets, reps, and rest time
+- Focus areas (strength, power, hypertrophy)
+- Brief explanation of why this plan fits the user
+
+3. OUTPUT DISPLAY
+- Display the workout in a clean, readable card layout
+- Separate days clearly
+- Highlight key exercises
+- Make it look modern (rounded corners, spacing, simple colors)
+
+4. EXTRA FEATURES (if possible)
+- Button to regenerate plan
+- Save plan locally (localStorage)
+- Mobile-friendly design
+
+AI PROMPT LOGIC:
+Use this structure when calling the AI:
+
+"You are a professional strength and conditioning coach. Create a personalized weightlifting program for this athlete:
+Sport: [sport]
+Level: [experience]
+Stats: [stats]
+Goals: [goals]
+Days per week: [days]
+
+Focus on improving performance for their sport. Include compound lifts, sport-specific training, and clear sets/reps/rest. Keep it structured and easy to follow."
+
+STYLE:
+- Minimal, modern UI (like a fitness app)
+- White background, subtle shadows, clean fonts
+- Make it feel like a real product, not a basic school project
+
+OUTPUT:
+Provide full working code with clear file structure and instructions to run.

@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: workout
+    description: AI workout generation and saved plans
 paths:
   /healthz:
     get:
@@ -24,6 +26,100 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /workout/plans:
+    get:
+      operationId: listWorkoutPlans
+      tags: [workout]
+      summary: List all saved workout plans
+      responses:
+        "200":
+          description: List of saved workout plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkoutPlan"
+    post:
+      operationId: saveWorkoutPlan
+      tags: [workout]
+      summary: Save a generated workout plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkoutPlanInput"
+      responses:
+        "201":
+          description: Saved plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutPlan"
+
+  /workout/plans/{id}:
+    get:
+      operationId: getWorkoutPlan
+      tags: [workout]
+      summary: Get a single saved plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The workout plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutPlan"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    delete:
+      operationId: deleteWorkoutPlan
+      tags: [workout]
+      summary: Delete a saved plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /workout/generate:
+    post:
+      operationId: generateWorkout
+      tags: [workout]
+      summary: Generate an AI workout plan (SSE streaming)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkoutRequest"
+      responses:
+        "200":
+          description: SSE stream of workout content chunks
+          content:
+            text/event-stream: {}
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +130,98 @@ components:
       required:
         - status
 
+    WorkoutPlan:
+      type: object
+      properties:
+        id:
+          type: integer
+        sport:
+          type: string
+        experienceLevel:
+          type: string
+        age:
+          type: integer
+        weight:
+          type: ["string", "null"]
+        currentStats:
+          type: string
+        goals:
+          type: string
+        daysPerWeek:
+          type: integer
+        planContent:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - sport
+        - experienceLevel
+        - age
+        - currentStats
+        - goals
+        - daysPerWeek
+        - planContent
+        - createdAt
+
+    WorkoutPlanInput:
+      type: object
+      properties:
+        sport:
+          type: string
+        experienceLevel:
+          type: string
+        age:
+          type: integer
+        weight:
+          type: string
+        currentStats:
+          type: string
+        goals:
+          type: string
+        daysPerWeek:
+          type: integer
+        planContent:
+          type: string
+      required:
+        - sport
+        - experienceLevel
+        - age
+        - currentStats
+        - goals
+        - daysPerWeek
+        - planContent
+
+    WorkoutRequest:
+      type: object
+      properties:
+        sport:
+          type: string
+        experienceLevel:
+          type: string
+        age:
+          type: integer
+        weight:
+          type: string
+        currentStats:
+          type: string
+        goals:
+          type: string
+        daysPerWeek:
+          type: integer
+      required:
+        - sport
+        - experienceLevel
+        - age
+        - currentStats
+        - goals
+        - daysPerWeek
+
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
