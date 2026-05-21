@@ -66,37 +66,37 @@ interface SportAssessmentConfig {
 
 const SPORT_ASSESSMENT_CONFIG: Record<string, SportAssessmentConfig> = {
   cycling: {
-    description: "Cycling performance is driven by leg power and posterior chain strength. These tests calibrate your lower body training load — hip drive, quad strength, and muscular endurance.",
+    description: "Cycling performance is built on leg power, hip drive, and muscular endurance. These tests calibrate your posterior chain and quad strength to prescribe the right training loads.",
     fields: [
-      { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 135 lbs × 5", type: "text" },
+      { key: "squat5RM", label: "Back Squat (5-rep set)", placeholder: "e.g. 135 lbs × 5", type: "text" },
       { key: "deadlift5RM", label: "Deadlift (5-rep set)", placeholder: "e.g. 185 lbs × 5", type: "text" },
       { key: "bodyweightSquats", label: "Bodyweight Squats (1 min)", placeholder: "e.g. 45", type: "number" },
-      { key: "verticalJump", label: "Vertical Jump", placeholder: "e.g. 22 inches", type: "text" },
+      { key: "verticalJump", label: "Vertical Jump (power proxy)", placeholder: "e.g. 22 inches", type: "text" },
     ],
   },
   running: {
-    description: "Runners need strong, injury-resistant legs, hips, and core. These tests identify your strength base so the program can protect joints and build speed-supporting power.",
+    description: "Running strength work is built around single-leg stability, injury prevention, and posterior chain development. These tests pinpoint your weak links so the program targets them directly.",
     fields: [
       { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 135 lbs × 5", type: "text" },
-      { key: "deadlift5RM", label: "Deadlift / RDL (5-rep set)", placeholder: "e.g. 155 lbs × 5", type: "text" },
+      { key: "deadlift5RM", label: "RDL / Deadlift (5-rep set)", placeholder: "e.g. 155 lbs × 5", type: "text" },
       { key: "maxPushUps", label: "Max Push-Ups (unbroken)", placeholder: "e.g. 25", type: "number" },
-      { key: "bodyweightSquats", label: "Bodyweight Squats (1 min)", placeholder: "e.g. 50", type: "number" },
+      { key: "bodyweightSquats", label: "Single-Leg Squat Reps (each leg)", placeholder: "e.g. 8", type: "number" },
       { key: "sprintTime", label: "Sprint Time", placeholder: "e.g. 4.9s (40 yards)", type: "text" },
     ],
   },
   soccer: {
-    description: "Soccer demands explosive power, agility, and multi-directional strength. These tests cover the key physical qualities that translate directly to on-field performance.",
+    description: "Soccer demands explosive acceleration, hamstring resilience, and multi-directional power. Hamstring injury prevention is a core priority — these tests identify your strength baseline for each key quality.",
     fields: [
       { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 145 lbs × 5", type: "text" },
-      { key: "deadlift5RM", label: "Deadlift (5-rep set)", placeholder: "e.g. 185 lbs × 5", type: "text" },
+      { key: "deadlift5RM", label: "Deadlift / Hip Thrust (5-rep set)", placeholder: "e.g. 185 lbs × 5", type: "text" },
       { key: "maxPushUps", label: "Max Push-Ups (unbroken)", placeholder: "e.g. 30", type: "number" },
       { key: "bodyweightSquats", label: "Bodyweight Squats (1 min)", placeholder: "e.g. 45", type: "number" },
       { key: "verticalJump", label: "Vertical Jump", placeholder: "e.g. 22 inches", type: "text" },
-      { key: "sprintTime", label: "Sprint Time", placeholder: "e.g. 4.8s (40 yards)", type: "text" },
+      { key: "sprintTime", label: "10m / 40yd Sprint Time", placeholder: "e.g. 4.8s (40 yards)", type: "text" },
     ],
   },
   basketball: {
-    description: "Basketball requires explosive legs, upper body strength, and elite vertical power. Vertical jump is your primary performance marker — every prescription is built around it.",
+    description: "Basketball training revolves around vertical jump, reactive strength, and upper body power for physicality. Vertical jump is your primary metric — every exercise is selected to improve it.",
     fields: [
       { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 145 lbs × 5", type: "text" },
       { key: "bench5RM", label: "Bench Press (5-rep set)", placeholder: "e.g. 115 lbs × 5", type: "text" },
@@ -109,10 +109,91 @@ const SPORT_ASSESSMENT_CONFIG: Record<string, SportAssessmentConfig> = {
   powerlifting: {
     description: "Powerlifting is defined by squat, bench, and deadlift. Enter your best 5-rep sets and we'll calculate precise training maxes using the Brzycki formula.",
     fields: [
-      { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 225 lbs × 5", type: "text" },
+      { key: "squat5RM", label: "Back Squat (5-rep set)", placeholder: "e.g. 225 lbs × 5", type: "text" },
       { key: "deadlift5RM", label: "Deadlift (5-rep set)", placeholder: "e.g. 315 lbs × 5", type: "text" },
       { key: "bench5RM", label: "Bench Press (5-rep set)", placeholder: "e.g. 185 lbs × 5", type: "text" },
       { key: "overheadPress5RM", label: "Overhead Press (5-rep set)", placeholder: "e.g. 115 lbs × 5", type: "text" },
+    ],
+  },
+  swimming: {
+    description: "Swimming strength work targets lat strength for the pull phase, rotator cuff health (the sport's most common injury site), hip flexors for kick power, and core rotation. Upper body dominates the assessment.",
+    fields: [
+      { key: "maxPushUps", label: "Max Pull-Ups or Push-Ups (unbroken)", placeholder: "e.g. 12 pull-ups", type: "number" },
+      { key: "overheadPress5RM", label: "Overhead Press (5-rep set)", placeholder: "e.g. 75 lbs × 5", type: "text" },
+      { key: "deadlift5RM", label: "RDL / Hip Hinge (5-rep set)", placeholder: "e.g. 135 lbs × 5", type: "text" },
+      { key: "bodyweightSquats", label: "Plank Hold (seconds)", placeholder: "e.g. 90", type: "number" },
+      { key: "sprintTime", label: "25m Sprint Swim Time (opt)", placeholder: "e.g. 14.2s", type: "text" },
+    ],
+  },
+  tennis: {
+    description: "Tennis is driven by rotational power in the serve and groundstrokes, shoulder external rotation strength (injury prevention), and lateral agility. These tests identify your rotational base and shoulder balance.",
+    fields: [
+      { key: "overheadPress5RM", label: "Overhead Press (5-rep set)", placeholder: "e.g. 75 lbs × 5", type: "text" },
+      { key: "deadlift5RM", label: "RDL / Deadlift (5-rep set)", placeholder: "e.g. 155 lbs × 5", type: "text" },
+      { key: "maxPushUps", label: "Max Push-Ups (unbroken)", placeholder: "e.g. 25", type: "number" },
+      { key: "bodyweightSquats", label: "Lateral Bounds (total reps, 30s)", placeholder: "e.g. 24", type: "number" },
+      { key: "sprintTime", label: "5m Lateral Shuffle Sprint", placeholder: "e.g. 2.1s", type: "text" },
+    ],
+  },
+  wrestling: {
+    description: "Wrestling demands pulling strength, explosive hips, grip endurance, and full-body durability under load. Deadlift and row strength are your primary performance indicators.",
+    fields: [
+      { key: "deadlift5RM", label: "Deadlift (5-rep set)", placeholder: "e.g. 275 lbs × 5", type: "text" },
+      { key: "bench5RM", label: "Bench Press (5-rep set)", placeholder: "e.g. 165 lbs × 5", type: "text" },
+      { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 185 lbs × 5", type: "text" },
+      { key: "maxPushUps", label: "Max Pull-Ups (unbroken)", placeholder: "e.g. 10", type: "number" },
+      { key: "bodyweightSquats", label: "Bodyweight Squats (1 min)", placeholder: "e.g. 50", type: "number" },
+    ],
+  },
+  volleyball: {
+    description: "Volleyball training revolves around vertical jump (blocking/spiking), shoulder strength and rotator cuff health (serving/spiking), and explosive landing mechanics. Vertical jump is your primary target.",
+    fields: [
+      { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 135 lbs × 5", type: "text" },
+      { key: "overheadPress5RM", label: "Overhead Press (5-rep set)", placeholder: "e.g. 75 lbs × 5", type: "text" },
+      { key: "maxPushUps", label: "Max Push-Ups (unbroken)", placeholder: "e.g. 25", type: "number" },
+      { key: "verticalJump", label: "Vertical Jump", placeholder: "e.g. 24 inches", type: "text" },
+      { key: "bodyweightSquats", label: "Bodyweight Squats (1 min)", placeholder: "e.g. 45", type: "number" },
+    ],
+  },
+  baseball: {
+    description: "Baseball/softball performance is built on rotational hip power (hitting), shoulder health for throwing longevity, and hip-to-shoulder separation. Asymmetry correction is baked into the program.",
+    fields: [
+      { key: "deadlift5RM", label: "Trap Bar Deadlift / RDL (5-rep set)", placeholder: "e.g. 185 lbs × 5", type: "text" },
+      { key: "bench5RM", label: "Bench Press (5-rep set)", placeholder: "e.g. 135 lbs × 5", type: "text" },
+      { key: "overheadPress5RM", label: "Overhead Press (5-rep set)", placeholder: "e.g. 75 lbs × 5", type: "text" },
+      { key: "maxPushUps", label: "Max Push-Ups (unbroken)", placeholder: "e.g. 25", type: "number" },
+      { key: "sprintTime", label: "60-Foot Sprint (baseball) or 40yd", placeholder: "e.g. 6.8s (60 ft)", type: "text" },
+    ],
+  },
+  golf: {
+    description: "Golf performance depends on rotational mobility and power, hip stability as a base for the swing, and thoracic spine mobility. Lower back injury prevention is a top priority.",
+    fields: [
+      { key: "deadlift5RM", label: "RDL / Hip Hinge (5-rep set)", placeholder: "e.g. 135 lbs × 5", type: "text" },
+      { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 115 lbs × 5", type: "text" },
+      { key: "maxPushUps", label: "Max Push-Ups (unbroken)", placeholder: "e.g. 20", type: "number" },
+      { key: "bodyweightSquats", label: "Single-Leg Balance Hold (seconds)", placeholder: "e.g. 45", type: "number" },
+      { key: "verticalJump", label: "Seated Med Ball Throw Distance (opt)", placeholder: "e.g. 12 ft", type: "text" },
+    ],
+  },
+  mma: {
+    description: "MMA demands explosive full-body power for striking and takedowns, pulling/grip strength for grappling, and durability under anaerobic fatigue. These tests cover all three pillars.",
+    fields: [
+      { key: "deadlift5RM", label: "Deadlift (5-rep set)", placeholder: "e.g. 245 lbs × 5", type: "text" },
+      { key: "bench5RM", label: "Bench Press (5-rep set)", placeholder: "e.g. 155 lbs × 5", type: "text" },
+      { key: "squat5RM", label: "Squat (5-rep set)", placeholder: "e.g. 185 lbs × 5", type: "text" },
+      { key: "maxPushUps", label: "Max Pull-Ups (unbroken)", placeholder: "e.g. 8", type: "number" },
+      { key: "bodyweightSquats", label: "Burpees (1 min)", placeholder: "e.g. 20", type: "number" },
+      { key: "sprintTime", label: "400m Run Time (conditioning baseline)", placeholder: "e.g. 72s", type: "text" },
+    ],
+  },
+  weightlifting: {
+    description: "Olympic weightlifting is built on explosive hip extension, front squat strength as the base, and overhead stability. If you have a snatch or clean & jerk max, enter it — otherwise use squat and deadlift.",
+    fields: [
+      { key: "squat5RM", label: "Front Squat (5-rep set)", placeholder: "e.g. 155 lbs × 5", type: "text" },
+      { key: "deadlift5RM", label: "Deadlift / Clean Pull (5-rep set)", placeholder: "e.g. 225 lbs × 5", type: "text" },
+      { key: "overheadPress5RM", label: "Overhead Press (5-rep set)", placeholder: "e.g. 95 lbs × 5", type: "text" },
+      { key: "verticalJump", label: "Vertical Jump (power proxy)", placeholder: "e.g. 24 inches", type: "text" },
+      { key: "sprintTime", label: "Snatch / C&J Max (if known)", placeholder: "e.g. Snatch 135 lbs", type: "text" },
     ],
   },
   general: {
@@ -380,6 +461,14 @@ export default function Home() {
                           <SelectItem value="running">Running</SelectItem>
                           <SelectItem value="soccer">Soccer</SelectItem>
                           <SelectItem value="basketball">Basketball</SelectItem>
+                          <SelectItem value="volleyball">Volleyball</SelectItem>
+                          <SelectItem value="baseball">Baseball / Softball</SelectItem>
+                          <SelectItem value="tennis">Tennis</SelectItem>
+                          <SelectItem value="golf">Golf</SelectItem>
+                          <SelectItem value="swimming">Swimming</SelectItem>
+                          <SelectItem value="wrestling">Wrestling / Grappling</SelectItem>
+                          <SelectItem value="mma">MMA / Combat Sports</SelectItem>
+                          <SelectItem value="weightlifting">Olympic Weightlifting</SelectItem>
                           <SelectItem value="powerlifting">Powerlifting</SelectItem>
                           <SelectItem value="general">General Fitness</SelectItem>
                         </SelectContent>
